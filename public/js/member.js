@@ -21,7 +21,7 @@ function renderMemberDataTable(rows = []) {
   if (!tbody) return;
 
   if (!rows.length) {
-    tbody.innerHTML = '<tr><td colspan="8" class="admin-empty">Belum ada data</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="10" class="admin-empty">Belum ada data</td></tr>';
     return;
   }
 
@@ -33,6 +33,10 @@ function renderMemberDataTable(rows = []) {
       : new Date(row.timestamp || Date.now()).toISOString().split('T')[0];
 
     const statusColor = row.status === 'BAHAYA' ? '#ef4444' : row.status === 'WASPADA' ? '#eab308' : '#22c55e';
+    
+    // Format arah angin
+    const windDirection = row.arah_angin !== undefined ? `${row.arah_angin}°` : '-';
+    const windSpeed = row.kecepatan_angin !== undefined ? `${row.kecepatan_angin} m/s` : '-';
 
     const adminActions = isAdmin
       ? `<button class="member-table-btn member-table-btn--edit" data-action="edit-row" data-device="${row.device}" data-entry-key="${row.entryKey}">Edit</button>
@@ -47,6 +51,8 @@ function renderMemberDataTable(rows = []) {
         <td>${row.pm10}</td>
         <td>${row.suhu}°C</td>
         <td>${row.kelembaban}%</td>
+        <td>${windSpeed}</td>
+        <td>${windDirection}</td>
         <td><span class="member-status-badge" style="color:${statusColor};border-color:${statusColor}40;background:${statusColor}10">${row.status || '-'}</span></td>
         <td class="member-table-actions">
           <button class="member-table-btn" data-action="download-row" data-device="${row.device}" data-date="${date}">↓ CSV</button>
