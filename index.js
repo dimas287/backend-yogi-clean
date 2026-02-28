@@ -1006,10 +1006,12 @@ console.log('Server-side Telegram alerts enabled');
 // ================= TELEGRAM BOT POLLING =================
 
 let lastTelegramUpdateId = 0;
+let isPolling = false;
 
 async function pollTelegramUpdates() {
-  if (!TELEGRAM_BOT_TOKEN) return;
+  if (!TELEGRAM_BOT_TOKEN || isPolling) return;
 
+  isPolling = true;
   console.log('Polling Telegram updates with offset:', lastTelegramUpdateId + 1);
   try {
     const endpoint = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getUpdates?offset=${lastTelegramUpdateId + 1}&timeout=30`;
@@ -1030,6 +1032,8 @@ async function pollTelegramUpdates() {
     }
   } catch (error) {
     console.error('Poll Telegram error:', error.message || error);
+  } finally {
+    isPolling = false;
   }
 }
 
