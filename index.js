@@ -998,9 +998,6 @@ db.ref('devices').on('child_changed', (snapshot) => {
     const current = deviceData.current;
     console.log(`Device ${deviceKey} updated: PM2.5=${current.pm25}`);
     sendAutoTelegramAlert(deviceKey, current);
-  }
-});
-
 console.log('Server-side Telegram alerts enabled');
 
 // ================= TELEGRAM BOT POLLING =================
@@ -1008,6 +1005,7 @@ console.log('Server-side Telegram alerts enabled');
 let lastTelegramUpdateId = 0;
 let isPolling = false;
 const processedUpdates = new Set();
+const processedCommands = new Set(); // Track command hashes
 
 async function pollTelegramUpdates() {
   if (!TELEGRAM_BOT_TOKEN || isPolling) return;
@@ -1062,7 +1060,21 @@ async function processTelegramUpdate(update) {
   const text = message.text?.trim();
   if (!text) return;
 
+  // Create command hash for deduplication
+  const commandHash = `${text}:${Math.floor(update.message.date / 60)}`; // Hash by text and minute
+  if (processedCommands.has(commandHash)) {
+    console.log('Skipping duplicate command:', commandHash);
+    return;
+  }
+
   await handleTelegramCommand(text, chatId);
+  processedCommands.add(commandHash);
+  
+  // Clean old command hashes (keep last 50)
+  if (processedCommands.size > 50) {
+    const oldestHash = processedCommands.values().next().value;
+    processedCommands.delete(oldestHash);
+  }
 }
 
 async function handleTelegramCommand(command, chatId) {
@@ -1075,10 +1087,13 @@ async function handleTelegramCommand(command, chatId) {
       `📋 *Daftar Perintah:*\n` +
       `/devices - 📱 Daftar semua device\n` +
       `/aqi <device> - 🌫️ Cek AQI saat ini\n` +
-      `/history <device> \\[limit\\] - 📊 Riwayat pengukuran\n` +
-      `/location <device> - 📍 Lokasi device\n` +
-      `/status <device> - 🚨 Status kualitas udara\n\n` +
+      `/history <device> \\[limit\\] - � Riwayat pengukuran\n` +
+      `/location <device> - � Lokasi device\n` +
+      `/status <device> - � Status kualitas udara\n\n` +
       `💡 *Contoh Penggunaan:*\n` +
+      `• /aqi SECTOR\\_A1\n` +
+      `• /history SECTOR\\_A1 5\n` +
+      `• /location SECTOR\\_A1\n` +
       `• /aqi SECTOR\\_A1\n` +
       `• /history SECTOR\\_A1 5\n` +
       `• /location SECTOR\\_A1\n` +
