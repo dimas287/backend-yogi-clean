@@ -790,12 +790,14 @@ body.member-sidebar-collapsed .sidebar-brand {
   display: flex;
   align-items: center;
   width: 100%;
+  padding-left: 2px;
 }
 
 body.member-sidebar-collapsed .sidebar-toggle-btn {
   margin: 0;
   position: static;
   flex-shrink: 0;
+  margin-left: 2px;
 }
 
 body.member-sidebar-collapsed .member-nav-btn {
@@ -803,6 +805,7 @@ body.member-sidebar-collapsed .member-nav-btn {
   padding: 10px 0;
   gap: 0;
   transform: none;
+  padding-left: 2px;
 }
 
 body.member-sidebar-collapsed .sidebar-footer {
