@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AirWatch Monitor | Tanjung Selor</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=JetBrains+Mono:wght@300;400;500&family=Barlow+Condensed:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="navbar-container">
+      <a href="#" class="navbar-brand">
+        <div class="navbar-logo">🏭</div>
+        <div class="navbar-brand-text">
+          <h1>AirWatch Monitor</h1>
+          <p>TANJUNG SELOR COAL MINING AREA</p>
+        </div>
+      </a>
+      
+      <button class="navbar-toggle" onclick="toggleMobileMenu()">
+        ☰
+      </button>
+      
+      <div class="navbar-right" id="navbarRight">
+        <div class="navbar-status">
+          <div class="navbar-status-dot"></div>
+          <span>LIVE</span>
+        </div>
+        <div class="navbar-clock">
+          <div class="navbar-time" id="clock">--:--:--</div>
+          <div class="navbar-date" id="dateLabel">Loading...</div>
+        </div>
+        <div class="auth-controls">
+          <span class="auth-user" id="authUserLabel">Guest</span>
+          <button class="location-bar-button" id="btnOpenAuth" type="button">Login</button>
+          <button class="location-bar-button" id="btnLogout" type="button" style="display:none;">Logout</button>
+          <button class="location-bar-button" id="btnOpenAdmin" type="button" style="display:none;">Admin</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="auth-modal" id="authModal" style="display:none;">
+    <div class="auth-modal-card login-modal-card">
+      <div class="login-modal-top-actions">
+        <button id="btnCloseAuthTop" type="button" class="login-modal-close-x" aria-label="Tutup modal">&times;</button>
+      </div>
+      <div class="login-modal-head">
+        <div class="login-modal-badge">🔐</div>
+        <div>
+          <h3>Masuk Dashboard</h3>
+          <p class="auth-help">Login untuk akses data. Jika belum punya akun, klik Sign Up.</p>
+        </div>
+      </div>
+
+      <div class="login-field">
+        <label class="login-field-label" for="authEmail">Email</label>
+        <input id="authEmail" type="email" placeholder="contoh@email.com" class="auth-input login-input" autocomplete="email" />
+      </div>
+
+      <div class="login-field">
+        <label class="login-field-label" for="authPassword">Password</label>
+        <input id="authPassword" type="password" placeholder="Masukkan password" class="auth-input login-input" autocomplete="current-password" />
+      </div>
+
+      <div class="signup-extra-block" id="signupExtraBlock" style="display:none;">
+        <div class="signup-extra-title">Data diri untuk pendaftaran akun</div>
+        <div class="login-field">
+          <label class="login-field-label" for="authName">Nama Lengkap</label>
+          <input id="authName" type="text" placeholder="Nama lengkap" class="auth-input login-input" autocomplete="name" />
+        </div>
+        <div class="login-field">
+          <label class="login-field-label" for="authPhone">No. HP</label>
+          <input id="authPhone" type="text" placeholder="08xxxxxxxxxx" class="auth-input login-input" autocomplete="tel" />
+        </div>
+        <div class="login-field">
+          <label class="login-field-label" for="authDepartment">Divisi / Departemen</label>
+          <input id="authDepartment" type="text" placeholder="Contoh: Operasional" class="auth-input login-input" />
+        </div>
+      </div>
+
+      <div class="auth-actions login-actions">
+        <button id="btnEmailLogin" type="button" class="location-bar-button login-btn login-btn-primary">Login</button>
+        <button id="btnEmailSignup" type="button" class="location-bar-button login-btn login-btn-ghost">Sign Up</button>
+      </div>
+
+      <button id="btnGoogleLogin" type="button" class="location-bar-button auth-google login-btn login-btn-google">Google Login</button>
+      <button id="btnCloseAuth" type="button" class="location-bar-button auth-close login-btn login-btn-close">Tutup</button>
+      <p id="authMessage" class="auth-message login-message">—</p>
+    </div>
+  </div>
+
+  <div class="auth-modal" id="adminModal" style="display:none;">
+    <div class="auth-modal-card admin-modal-card">
+      <h3>Admin · Kelola User</h3>
+      <p class="auth-help">Buat user, ubah role, status, dan akses device</p>
+
+      <div class="admin-create-form">
+        <input id="adminCreateName" type="text" placeholder="Nama" class="auth-input" />
+        <input id="adminCreateEmail" type="email" placeholder="Email user baru" class="auth-input" />
+        <input id="adminCreatePassword" type="password" placeholder="Password awal" class="auth-input" />
+        <input id="adminCreateDevices" type="text" placeholder="Devices (contoh: sektor-a1,sektor-a2)" class="auth-input" />
+        <select id="adminCreateRole" class="auth-input">
+          <option value="user">User</option>
+          <option value="admin">Admin</option>
+        </select>
+        <button id="btnAdminCreateUser" type="button" class="location-bar-button">+ Buat User</button>
+      </div>
+
+      <div class="admin-users-table-wrap">
+        <table class="admin-users-table">
+          <thead>
+            <tr>
+              <th>Nama</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Approval</th>
+              <th>Status</th>
+              <th>Aktivitas Terakhir</th>
+              <th>IP Login Terakhir</th>
+              <th>Dibuat</th>
+              <th>Devices</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="adminUsersTableBody">
+            <tr>
+              <td colspan="10" class="admin-empty">Belum ada data</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="auth-actions">
+        <button id="btnAdminRefresh" type="button" class="location-bar-button">Refresh</button>
+        <button id="btnCloseAdmin" type="button" class="location-bar-button auth-close">Tutup</button>
+      </div>
+      <p id="adminMessage" class="auth-message">—</p>
+    </div>
+  </div>
+
+  <!-- PAGE BODY: sidebar + content in flex row -->
+  <div class="page-body">
+
+  <div class="member-layout" id="memberLayout" style="display:none;">
+    <aside class="member-sidebar" id="memberSidebar">
+
+      <div class="sidebar-brand">
+        <div class="sidebar-brand-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </div>
+        <span class="sidebar-brand-text">AirWatch</span>
+        <button type="button" id="btnToggleSidebar" class="sidebar-toggle-btn" title="Toggle Sidebar" aria-label="Toggle Sidebar">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+      </div>
+
+      <div class="sidebar-section-label">NAVIGASI</div>
+
+      <nav class="sidebar-nav">
+        <button type="button" class="member-nav-btn active" data-section="dashboard">
+          <span class="member-nav-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          </span>
+          <span class="member-nav-label">Dashboard</span>
+          <span class="nav-tooltip">Dashboard</span>
+        </button>
+
+        <button type="button" class="member-nav-btn" data-section="data">
+          <span class="member-nav-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          </span>
+          <span class="member-nav-label">Data</span>
+          <span class="nav-tooltip">Data</span>
+        </button>
+
+        <button type="button" class="member-nav-btn" data-section="lokasi">
+          <span class="member-nav-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          </span>
+          <span class="member-nav-label">Lokasi</span>
+          <span class="nav-tooltip">Lokasi</span>
+        </button>
+
+        <button type="button" class="member-nav-btn" data-section="setting">
+          <span class="member-nav-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+          </span>
+          <span class="member-nav-label">Setting</span>
+          <span class="nav-tooltip">Setting</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-footer-dot"></div>
+        <span class="member-nav-label sidebar-footer-text">Live Monitoring</span>
+      </div>
+
+    </aside>
+  </div>
+
+  <div class="page-content">
+
+  <div id="dashboardMainSection">
+
+  <!-- LOCATION BAR -->
+  <div class="location-bar">
+    <div class="location-bar-content">
+      <div class="location-bar-item">
+        📍 <span>Lokasi:</span> Tambang Batu Bara Tanjung Selor
+      </div>
+      <div class="location-bar-separator">|</div>
+      <div class="location-bar-item">
+        🔄 Update: <span>1 Menit</span>
+      </div>
+      <div class="location-bar-separator">|</div>
+      <div class="location-bar-item">
+        📊 <button onclick="downloadCSV()" class="location-bar-button">Download CSV</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="air-alert" id="airAlertBar" style="display:none;">
+    <div class="air-alert-text" id="airAlertText">Peringatan kualitas udara</div>
+    <button type="button" class="location-bar-button air-alert-close" onclick="dismissAirAlert()">Tutup</button>
+  </div>
+
+  <!-- DEVICE OVERVIEW -->
+  <div class="row-label">OVERVIEW SEMUA SEKTOR</div>
+  <div class="devices-overview" id="devicesOverview">
+    <!-- Device cards will be inserted here -->
+  </div>
+
+  <!-- ROW 1: AQI + PM2.5 + PM10 -->
+  <div class="row-label">INDEKS KUALITAS UDARA (REAL-TIME) - <span id="selectedDeviceLabel">Loading...</span></div>
+  <div class="main-grid">
+
+    <!-- AQI CARD -->
+    <div class="aqi-card">
+      <div class="card-label">AIR QUALITY INDEX</div>
+
+      <div class="gauge-wrap">
+        <svg class="gauge-svg" viewBox="0 0 200 110">
+          <defs>
+            <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" style="stop-color:#22c55e"/>
+              <stop offset="20%" style="stop-color:#eab308"/>
+              <stop offset="40%" style="stop-color:#f97316"/>
+              <stop offset="60%" style="stop-color:#ef4444"/>
+              <stop offset="80%" style="stop-color:#a855f7"/>
+              <stop offset="100%" style="stop-color:#7f1d1d"/>
+            </linearGradient>
+          </defs>
+          <!-- Track -->
+          <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="14" stroke-linecap="round"/>
+          <!-- Filled arc -->
+          <path id="gaugeArc" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gaugeGrad)" stroke-width="14" stroke-linecap="round" stroke-dasharray="251.2" stroke-dashoffset="200"/>
+          <!-- Needle -->
+          <line id="gaugeNeedle" x1="100" y1="100" x2="100" y2="28" stroke="white" stroke-width="2.5" stroke-linecap="round" transform="rotate(-85, 100, 100)" opacity="0.9"/>
+          <circle cx="100" cy="100" r="6" fill="white" opacity="0.9"/>
+          <!-- Scale markers -->
+          <text x="15" y="110" fill="#22c55e" font-size="8" font-family="monospace">0</text>
+          <text x="170" y="110" fill="#7f1d1d" font-size="8" font-family="monospace">500</text>
+          <text x="89" y="20" fill="#eab308" font-size="8" font-family="monospace">250</text>
+        </svg>
+      </div>
+
+      <div class="gauge-value-block">
+        <div class="gauge-number c-good live-val" id="aqiValue">—</div>
+        <div class="gauge-unit">AQI SCORE</div>
+      </div>
+      <div class="status-badge c-good" id="aqiStatus" style="border-color: #22c55e;">—</div>
+
+      <div class="aqi-formula" id="aqiFormulaBox">
+        <div class="f-title">▸ PERHITUNGAN AQI AKTIF</div>
+        <div class="f-line"><span>AQI Dominan:</span><span class="f-val" id="fDominant">—</span></div>
+        <div class="f-line"><span>Parameter:</span><span class="f-val" id="fParam">—</span></div>
+        <div class="f-line"><span>Konsentrasi:</span><span class="f-val" id="fConc">—</span></div>
+        <div class="f-line"><span>Breakpoint Rendah:</span><span class="f-val" id="fBpLo">—</span></div>
+        <div class="f-line"><span>Breakpoint Tinggi:</span><span class="f-val" id="fBpHi">—</span></div>
+        <div class="f-line"><span>AQI Hasil:</span><span class="f-val c-accent" id="fResult">—</span></div>
+      </div>
+    </div>
+
+    <!-- PM2.5 CARD -->
+    <div class="pollutant-card">
+      <div class="p-header">
+        <div>
+          <div class="p-name">PM<sub style="font-size:14px">2.5</sub></div>
+          <div class="p-sub">PARTICULATE MATTER 2.5 μm</div>
+        </div>
+        <div class="trend-indicator c-accent" id="pm25Trend">↗ +2.1</div>
+      </div>
+
+      <div class="p-value-row">
+        <div class="p-value c-accent live-val" id="pm25Value">—</div>
+        <div class="p-unit">μg/m³</div>
+      </div>
+
+      <div class="conc-bar-wrap">
+        <div class="conc-bar-label">
+          <span>0 μg/m³</span>
+          <span id="pm25BarLabel">—</span>
+          <span>500 μg/m³</span>
+        </div>
+        <div class="conc-bar-track">
+          <div class="conc-bar-fill" id="pm25Bar" style="width:0%"></div>
+          <div class="conc-bar-indicator" id="pm25Indicator" style="left:0%"></div>
+        </div>
+      </div>
+
+      <div class="p-stats">
+        <div class="p-stat">
+          <div class="p-stat-val" id="pm25Min">—</div>
+          <div class="p-stat-label">MIN (1j)</div>
+        </div>
+        <div class="p-stat">
+          <div class="p-stat-val" id="pm25Avg">—</div>
+          <div class="p-stat-label">RATA-RATA</div>
+        </div>
+        <div class="p-stat">
+          <div class="p-stat-val" id="pm25Max">—</div>
+          <div class="p-stat-label">MAX (1j)</div>
+        </div>
+      </div>
+
+      <div class="aqi-formula" style="margin-top: 16px;">
+        <div class="f-title">▸ AQI PM2.5</div>
+        <div class="f-line"><span>Nilai Konsentrasi:</span><span class="f-val" id="pm25ConcCalc">—</span></div>
+        <div class="f-line"><span>Kategori AQI:</span><span class="f-val" id="pm25AqiCat">—</span></div>
+        <div class="f-line"><span>AQI Dihitung:</span><span class="f-val c-accent" id="pm25AqiVal">—</span></div>
+        <div class="f-line"><span>Batas ISPU Nasional:</span><span class="f-val">35.4 μg/m³</span></div>
+      </div>
+    </div>
+
+    <!-- PM10 CARD -->
+    <div class="pollutant-card">
+      <div class="p-header">
+        <div>
+          <div class="p-name">PM<sub style="font-size:14px">10</sub></div>
+          <div class="p-sub">PARTICULATE MATTER 10 μm</div>
+        </div>
+        <div class="trend-indicator" id="pm10Trend" style="color:#eab308">↘ -1.4</div>
+      </div>
+
+      <div class="p-value-row">
+        <div class="p-value live-val" style="color:#eab308" id="pm10Value">—</div>
+        <div class="p-unit">μg/m³</div>
+      </div>
+
+      <div class="conc-bar-wrap">
+        <div class="conc-bar-label">
+          <span>0 μg/m³</span>
+          <span id="pm10BarLabel">—</span>
+          <span>600 μg/m³</span>
+        </div>
+        <div class="conc-bar-track">
+          <div class="conc-bar-fill" id="pm10Bar" style="width:0%"></div>
+          <div class="conc-bar-indicator" id="pm10Indicator" style="left:0%"></div>
+        </div>
+      </div>
+
+      <div class="p-stats">
+        <div class="p-stat">
+          <div class="p-stat-val" id="pm10Min">—</div>
+          <div class="p-stat-label">MIN (1j)</div>
+        </div>
+        <div class="p-stat">
+          <div class="p-stat-val" id="pm10Avg">—</div>
+          <div class="p-stat-label">RATA-RATA</div>
+        </div>
+        <div class="p-stat">
+          <div class="p-stat-val" id="pm10Max">—</div>
+          <div class="p-stat-label">MAX (1j)</div>
+        </div>
+      </div>
+
+      <div class="aqi-formula" style="margin-top: 16px;">
+        <div class="f-title">▸ AQI PM10</div>
+        <div class="f-line"><span>Nilai Konsentrasi:</span><span class="f-val" id="pm10ConcCalc">—</span></div>
+        <div class="f-line"><span>Kategori AQI:</span><span class="f-val" id="pm10AqiCat">—</span></div>
+        <div class="f-line"><span>AQI Dihitung:</span><span class="f-val" style="color:#eab308" id="pm10AqiVal">—</span></div>
+        <div class="f-line"><span>Batas ISPU Nasional:</span><span class="f-val">150 μg/m³</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROW 2: WIND DATA -->
+  <div class="row-label">DATA ANGIN (REAL-TIME)</div>
+  <div class="main-grid">
+
+    <!-- WIND SPEED CARD -->
+    <div class="wind-speed-card">
+      <div class="wind-header">
+        <div>
+          <div class="wind-name">💨 KECEPATAN ANGIN</div>
+          <div class="wind-sub">WIND SPEED</div>
+        </div>
+        <div class="wind-indicator" id="windSpeedTrend" style="color:#3b82f6">→ 0.0</div>
+      </div>
+
+      <div class="wind-speed-content">
+        <div class="wind-speed-display">
+          <div class="wind-speed-value" id="windSpeed">—</div>
+          <div class="wind-speed-unit">m/s</div>
+        </div>
+        
+        <div class="wind-beaufort">
+          <div class="beaufort-scale" id="beaufortScale">—</div>
+          <div class="beaufort-desc" id="beaufortDesc">Calm</div>
+        </div>
+      </div>
+
+      <div class="wind-stats">
+        <div class="wind-stat">
+          <div class="wind-stat-val" id="windMax">—</div>
+          <div class="wind-stat-label">MAX (24j)</div>
+        </div>
+        <div class="wind-stat">
+          <div class="wind-stat-val" id="windAvg">—</div>
+          <div class="wind-stat-label">RATA-RATA</div>
+        </div>
+        <div class="wind-stat">
+          <div class="wind-stat-val" id="windMin">—</div>
+          <div class="wind-stat-label">MIN (24j)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WIND DIRECTION CARD -->
+    <div class="wind-direction-card">
+      <div class="wind-header">
+        <div>
+          <div class="wind-name">🧭 ARAH ANGIN</div>
+          <div class="wind-sub">WIND DIRECTION</div>
+        </div>
+        <div class="wind-indicator" id="windDirectionTrend" style="color:#06b6d4">N 0°</div>
+      </div>
+
+      <div class="wind-direction-content">
+        <div class="wind-compass">
+          <div class="compass-circle">
+            <div class="compass-arrow" id="windArrow" style="transform: rotate(0deg);">↑</div>
+            <div class="compass-labels">
+              <span class="compass-label n">N</span>
+              <span class="compass-label e">E</span>
+              <span class="compass-label s">S</span>
+              <span class="compass-label w">W</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="wind-direction-data">
+          <div class="wind-direction-row">
+            <div class="wind-direction-value" id="windDirection">—</div>
+            <div class="wind-direction-unit">derajat</div>
+          </div>
+          
+          <div class="wind-direction-cardinal">
+            <div class="cardinal-direction" id="cardinalDirection">N</div>
+            <div class="cardinal-desc" id="cardinalDesc">Utara</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="wind-direction-stats">
+        <div class="wind-stat">
+          <div class="wind-stat-val" id="windDirectionMax">—</div>
+          <div class="wind-stat-label">MAX (24j)</div>
+        </div>
+        <div class="wind-stat">
+          <div class="wind-stat-val" id="windDirectionMode">—</div>
+          <div class="wind-stat-label">TERSERING (24j)</div>
+        </div>
+        <div class="wind-stat">
+          <div class="wind-stat-val" id="windDirectionMin">—</div>
+          <div class="wind-stat-label">MIN (24j)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="memberOnlySection" style="display:none;">
+  <!-- ROW 3: CHART + BREAKDOWN -->
+  <div class="row-label">GRAFIK HISTORIS &amp; PERHITUNGAN AQI</div>
+  <div class="second-row">
+
+    <!-- CHART CARD -->
+    <div class="chart-card">
+      <div class="chart-card-header">
+        <div class="chart-title">KONSENTRASI PARTIKULAT (1 HARI TERAKHIR)</div>
+        <div class="chart-tabs">
+          <button class="chart-tab active" onclick="switchChart('both')">PM2.5 + PM10</button>
+          <button class="chart-tab" onclick="switchChart('pm25')">PM2.5</button>
+          <button class="chart-tab" onclick="switchChart('pm10')">PM10</button>
+        </div>
+      </div>
+      <canvas id="mainChart" height="220"></canvas>
+    </div>
+
+    <!-- BREAKDOWN CARD -->
+    <div class="breakdown-card">
+      <div class="breakdown-title">SKALA &amp; KATEGORI AQI</div>
+
+      <div class="breakdown-scale">
+        <div class="scale-item c-good" id="sc0">
+          <div class="scale-dot" style="background:#22c55e"></div>
+          <div>
+            <div style="font-weight:700;font-size:12px;">BAIK</div>
+            <div style="font-size:10px;opacity:0.7">Kualitas udara memuaskan</div>
+          </div>
+          <div class="scale-range">0–50</div>
+        </div>
+        <div class="scale-item c-moderate" id="sc1">
+          <div class="scale-dot" style="background:#eab308"></div>
+          <div>
+            <div style="font-weight:700;font-size:12px;">SEDANG</div>
+            <div style="font-size:10px;opacity:0.7">Risiko rendah bagi sensitif</div>
+          </div>
+          <div class="scale-range">51–100</div>
+        </div>
+        <div class="scale-item c-sensitive" id="sc2">
+          <div class="scale-dot" style="background:#f97316"></div>
+          <div>
+            <div style="font-weight:700;font-size:12px;">TIDAK SEHAT*</div>
+            <div style="font-size:10px;opacity:0.7">Sensitif terpengaruh</div>
+          </div>
+          <div class="scale-range">101–150</div>
+        </div>
+        <div class="scale-item c-unhealthy" id="sc3">
+          <div class="scale-dot" style="background:#ef4444"></div>
+          <div>
+            <div style="font-weight:700;font-size:12px;">TIDAK SEHAT</div>
+            <div style="font-size:10px;opacity:0.7">Semua orang terpengaruh</div>
+          </div>
+          <div class="scale-range">151–200</div>
+        </div>
+        <div class="scale-item c-vunhealthy" id="sc4">
+          <div class="scale-dot" style="background:#a855f7"></div>
+          <div>
+            <div style="font-weight:700;font-size:12px;">SANGAT TIDAK SEHAT</div>
+            <div style="font-size:10px;opacity:0.7">Bahaya kesehatan serius</div>
+          </div>
+          <div class="scale-range">201–300</div>
+        </div>
+        <div class="scale-item c-hazardous" id="sc5">
+          <div class="scale-dot" style="background:#dc2626"></div>
+          <div>
+            <div style="font-weight:700;font-size:12px;">BERBAHAYA</div>
+            <div style="font-size:10px;opacity:0.7">Darurat kesehatan</div>
+          </div>
+          <div class="scale-range">301+</div>
+        </div>
+      </div>
+
+      <div class="formula-block">
+        <div class="formula-title">▸ FORMULA EPA AQI (STANDAR NASIONAL ISPU)</div>
+        <div class="formula-eq">
+          AQI = [(AQIhi - AQIlo) / (Conchi - Conclo)] × (Conc - Conclo) + AQIlo
+        </div>
+        <div class="formula-vars">
+          <span>Conc</span> = Konsentrasi polutan (μg/m³)<br/>
+          <span>Conclo/hi</span> = Breakpoint konsentrasi bawah/atas<br/>
+          <span>AQIlo/hi</span> = Nilai AQI breakpoint bawah/atas
+        </div>
+        <div class="calc-steps" id="calcSteps">
+          <br/>▸ PM2.5 Calculation:<br/>
+          &nbsp;&nbsp;Conc = <span class="step-val" id="cs25conc">—</span> μg/m³<br/>
+          &nbsp;&nbsp;Breakpoint: [<span class="step-val" id="cs25bplo">—</span>, <span class="step-val" id="cs25bphi">—</span>]<br/>
+          &nbsp;&nbsp;AQI Range: [<span class="step-val" id="cs25aqilo">—</span>, <span class="step-val" id="cs25aqihi">—</span>]<br/>
+          &nbsp;&nbsp;= <span class="step-val" id="cs25result">—</span><br/><br/>
+          ▸ PM10 Calculation:<br/>
+          &nbsp;&nbsp;Conc = <span class="step-val" id="cs10conc">—</span> μg/m³<br/>
+          &nbsp;&nbsp;Breakpoint: [<span class="step-val" id="cs10bplo">—</span>, <span class="step-val" id="cs10bphi">—</span>]<br/>
+          &nbsp;&nbsp;AQI Range: [<span class="step-val" id="cs10aqilo">—</span>, <span class="step-val" id="cs10aqihi">—</span>]<br/>
+          &nbsp;&nbsp;= <span class="step-val" id="cs10result">—</span><br/><br/>
+          ▸ AQI Final (MAX) = <span class="step-val c-accent" id="csFinal">—</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROW 3: MINI STATS -->
+  <div class="row-label">STATISTIK HARIAN</div>
+  <div class="third-row">
+    <div class="stat-mini">
+      <div class="stat-mini-label">AQI Tertinggi Hari Ini</div>
+      <div class="stat-mini-val c-sensitive" id="statMaxAqi">—</div>
+      <div class="stat-mini-sub">Terrekam pukul <span id="statMaxTime">—</span></div>
+    </div>
+    <div class="stat-mini">
+      <div class="stat-mini-label">Rata-rata AQI (24j)</div>
+      <div class="stat-mini-val c-moderate" id="statAvgAqi">—</div>
+      <div class="stat-mini-sub">Kategori: <span id="statAvgCat">—</span></div>
+    </div>
+    <div class="stat-mini">
+      <div class="stat-mini-label">Total Pengukuran</div>
+      <div class="stat-mini-val c-good" id="statCount">0</div>
+      <div class="stat-mini-sub">Sejak sensor aktif hari ini</div>
+    </div>
+    <div class="stat-mini">
+      <div class="stat-mini-label">Status Sistem</div>
+      <div class="stat-mini-val" style="font-size:16px;">
+        <span id="systemStatus" style="color:#22c55e">● ONLINE</span>
+      </div>
+      <div class="stat-mini-sub">Latensi: <span id="statLatency">—</span>ms</div>
+    </div>
+  </div>
+  </div>
+  </div>
+
+  <section id="sectionData" class="member-section" style="display:none;">
+    <div class="row-label">DATA · TABEL KESELURUHAN</div>
+    <div class="member-card">
+      <div class="member-card-header">
+        <h3>Data Monitoring</h3>
+        <div class="member-card-actions">
+          <button type="button" class="location-bar-button" id="btnReloadMemberTable">Refresh</button>
+        </div>
+      </div>
+      <div class="member-filter-bar">
+        <select id="memberFilterDevice" class="auth-input member-filter-input">
+          <option value="">Semua Device</option>
+        </select>
+        <input id="memberFilterStartDate" type="date" class="auth-input member-filter-input" />
+        <input id="memberFilterEndDate" type="date" class="auth-input member-filter-input" />
+        <select id="memberFilterLimit" class="auth-input member-filter-input">
+          <option value="300">300 data</option>
+          <option value="500" selected>500 data</option>
+          <option value="1000">1000 data</option>
+          <option value="2000">2000 data</option>
+          <option value="5000">5000 data</option>
+        </select>
+        <button type="button" class="location-bar-button" id="btnApplyMemberFilter">Terapkan</button>
+        <button type="button" class="location-bar-button" id="btnResetMemberFilter">Reset</button>
+        <button type="button" class="location-bar-button" id="btnDownloadFilteredMember">Unduh Filter CSV</button>
+      </div>
+      <div class="member-table-wrap">
+        <table class="member-table" id="memberDataTable">
+          <thead>
+            <tr>
+              <th>Waktu</th>
+              <th>Device</th>
+              <th>PM2.5</th>
+              <th>PM10</th>
+              <th>Suhu</th>
+              <th>Kelembaban</th>
+              <th>Status</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="memberDataTableBody">
+            <tr><td colspan="8" class="admin-empty">Belum ada data</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p id="memberDataMessage" class="auth-message">—</p>
+    </div>
+  </section>
+
+  <section id="sectionLokasi" class="member-section" style="display:none;">
+    <div class="row-label">LOKASI · PETA ALAT</div>
+    <div class="member-card">
+      <div class="member-card-header">
+        <h3>Peta Lokasi Alat</h3>
+        <div class="member-card-actions">
+          <button type="button" class="location-bar-button" id="btnReloadLocations">Refresh Lokasi</button>
+        </div>
+      </div>
+      <div id="locationMap" class="member-map"></div>
+      <div id="locationList" class="location-list"></div>
+      <p id="locationMessage" class="auth-message">—</p>
+    </div>
+  </section>
+
+  <section id="sectionSetting" class="member-section" style="display:none;">
+    <div class="row-label">SETTING · AKUN</div>
+    <div class="member-card">
+      <div class="member-card-header">
+        <h3>Pengaturan Akun</h3>
+      </div>
+      <div class="settings-grid">
+        <div><strong>Nama:</strong> <span id="settingName">—</span></div>
+        <div><strong>Email:</strong> <span id="settingEmail">—</span></div>
+        <div><strong>No. HP:</strong> <span id="settingPhone">—</span></div>
+        <div><strong>Departemen:</strong> <span id="settingDepartment">—</span></div>
+        <div><strong>Role:</strong> <span id="settingRole">—</span></div>
+        <div><strong>UID:</strong> <span id="settingUid">—</span></div>
+        <div><strong>Dibuat:</strong> <span id="settingCreatedAt">—</span></div>
+        <div><strong>Login Terakhir:</strong> <span id="settingLastLogin">—</span></div>
+        <div><strong>Aktivitas Terakhir:</strong> <span id="settingLastActivity">—</span></div>
+        <div><strong>IP Terakhir:</strong> <span id="settingLastIp">—</span></div>
+      </div>
+      <div class="settings-profile-form">
+        <h4>Ubah Data Diri</h4>
+        <div class="settings-profile-grid">
+          <input id="settingEditName" type="text" class="auth-input" placeholder="Nama lengkap" />
+          <input id="settingEditPhone" type="text" class="auth-input" placeholder="No. HP" />
+          <input id="settingEditDepartment" type="text" class="auth-input" placeholder="Divisi / Departemen" />
+        </div>
+        <div class="member-card-actions">
+          <button id="btnSaveProfile" type="button" class="location-bar-button">Simpan Profil</button>
+        </div>
+        <p id="settingProfileMessage" class="auth-message">—</p>
+      </div>
+      <p class="auth-help" id="settingHint">User dapat melihat data tabel dan mengunduh data. Admin dapat mengubah koordinat lokasi dan mengedit/hapus data.</p>
+    </div>
+  </section>
+
+  </div><!-- /page-content -->
+  </div><!-- /page-body -->
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <h3>AirWatch Monitor</h3>
+          <p>Sistem monitoring kualitas udara real-time untuk area pertambangan batu bara Tanjung Selor. Dilengkapi dengan sensor IoT canggih dan dashboard analitik komprehensif.</p>
+          <p>© 2024 AirWatch Monitor. All rights reserved.</p>
+        </div>
+        
+        <div class="footer-links">
+          <h4>Monitoring</h4>
+          <ul>
+            <li><a href="#dashboard">Dashboard</a></li>
+            <li><a href="#devices">Perangkat</a></li>
+            <li><a href="#history">Riwayat Data</a></li>
+            <li><a href="#reports">Laporan</a></li>
+          </ul>
+        </div>
+        
+        <div class="footer-links">
+          <h4>Sistem</h4>
+          <ul>
+            <li><a href="#status">Status Sistem</a></li>
+            <li><a href="#api">API Documentation</a></li>
+            <li><a href="#alerts">Notifikasi</a></li>
+            <li><a href="#settings">Pengaturan</a></li>
+          </ul>
+        </div>
+        
+        <div class="footer-links">
+          <h4>Informasi</h4>
+          <ul>
+            <li><a href="#about">Tentang</a></li>
+            <li><a href="#contact">Kontak</a></li>
+            <li><a href="#support">Dukungan</a></li>
+            <li><a href="#privacy">Kebijakan Privasi</a></li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="footer-bottom">
+        <span>TANJUNG SELOR COAL MINING AREA · KALIMANTAN UTARA</span>
+        <span id="lastUpdate">Last Update: —</span>
+        <span>CLOUD ARCHITECTURE · REAL-TIME IoT MONITORING</span>
+      </div>
+    </div>
+  </footer>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+  window.FIREBASE_CONFIG = {
+    apiKey: "AIzaSyBpi5mkmB2lIsPgCzHcffL5riCBYX9ct2I",
+    authDomain: "air-quality-357a1.firebaseapp.com",
+    projectId: "air-quality-357a1",
+    appId: "1:460995898208:web:0b6883b3555c80acd88c05"
+  };
+</script>
+<script src="js/aqi.js"></script>
+<script src="js/wind.js"></script>
+<script src="js/chart-init.js"></script>
+<script src="js/sidebar.js"></script>
+<script src="js/member.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
