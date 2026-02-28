@@ -789,18 +789,20 @@ body.member-sidebar-collapsed .sidebar-brand {
   padding-bottom: 14px;
   display: flex;
   align-items: center;
+  width: 100%;
 }
 
 body.member-sidebar-collapsed .sidebar-toggle-btn {
   margin: 0;
-  position: relative;
-  left: 0;
+  position: static;
+  flex-shrink: 0;
 }
 
 body.member-sidebar-collapsed .member-nav-btn {
   justify-content: center;
   padding: 10px 0;
   gap: 0;
+  transform: none;
 }
 
 body.member-sidebar-collapsed .sidebar-footer {
