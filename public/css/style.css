@@ -778,6 +778,12 @@ body.member-sidebar-collapsed .sidebar-footer-text {
   overflow: hidden;
 }
 
+body.member-sidebar-collapsed .sidebar-brand-icon {
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
+}
+
 body.member-sidebar-collapsed .sidebar-brand {
   justify-content: center;
   padding-bottom: 14px;
