@@ -787,11 +787,14 @@ body.member-sidebar-collapsed .sidebar-brand-icon {
 body.member-sidebar-collapsed .sidebar-brand {
   justify-content: center;
   padding-bottom: 14px;
+  display: flex;
+  align-items: center;
 }
 
 body.member-sidebar-collapsed .sidebar-toggle-btn {
-  margin-left: auto;
-  margin-right: auto;
+  margin: 0;
+  position: relative;
+  left: 0;
 }
 
 body.member-sidebar-collapsed .member-nav-btn {
