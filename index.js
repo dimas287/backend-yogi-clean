@@ -5,6 +5,7 @@ console.log('TELEGRAM_CHAT_ID:', process.env.TELEGRAM_CHAT_ID);
 const admin = require("firebase-admin");
 const express = require("express");
 const cors = require("cors");
+const nodemailer = require("nodemailer");
 
 const app = express();
 app.use(cors());
@@ -50,6 +51,79 @@ const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || "";
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || "";
 const ACTIVITY_WRITE_INTERVAL_MS = 60 * 1000;
 const lastActivityWriteCache = new Map();
+
+// ================= EMAIL SERVICE =================
+let emailTransporter = null;
+
+function initEmailService() {
+  if (process.env.EMAIL_HOST && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+    emailTransporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: parseInt(process.env.EMAIL_PORT) || 587,
+      secure: process.env.EMAIL_SECURE === "true",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+      }
+    });
+    console.log('Email service initialized');
+  } else {
+    console.log('Email service not configured - skipping email notifications');
+  }
+}
+
+async function sendApprovalEmail(userEmail, userName, userRole) {
+  if (!emailTransporter) {
+    console.log('Email service not available - skipping approval notification');
+    return;
+  }
+
+  try {
+    const mailOptions = {
+      from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+      to: userEmail,
+      subject: '✅ Akun Anda Telah Disetujui - Air Quality System',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+          <div style="background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; backdrop-filter: blur(10px);">
+            <h1 style="text-align: center; margin-bottom: 30px; font-size: 28px;">🎉 Selamat! Akun Anda Disetujui</h1>
+            
+            <div style="background: rgba(255,255,255,0.9); color: #333; padding: 25px; border-radius: 10px; margin: 20px 0;">
+              <p style="font-size: 16px; margin: 0 0 15px 0;">Hai <strong>${userName}</strong>,</p>
+              <p style="font-size: 16px; margin: 0 0 15px 0;">Akun Anda di <strong>Air Quality Monitoring System</strong> telah disetujui oleh administrator.</p>
+              <p style="font-size: 16px; margin: 0 0 15px 0;">Anda sekarang dapat login dengan akses <strong>${userRole === 'admin' ? 'Administrator' : 'User'}</strong>.</p>
+            </div>
+
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="#" style="background: #4CAF50; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
+                🚀 Login Sekarang
+              </a>
+            </div>
+
+            <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 8px; margin-top: 20px;">
+              <h3 style="margin: 0 0 15px 0; font-size: 18px;">📋 Detail Akun:</h3>
+              <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
+                <li>Email: ${userEmail}</li>
+                <li>Role: ${userRole === 'admin' ? 'Administrator' : 'User'}</li>
+                <li>Status: ✅ Aktif</li>
+              </ul>
+            </div>
+
+            <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.3); font-size: 12px; opacity: 0.8;">
+              <p style="margin: 0;">Email ini dikirim otomatis oleh Air Quality Monitoring System</p>
+              <p style="margin: 5px 0 0 0;">Jika Anda tidak merasa mendaftar, abaikan email ini.</p>
+            </div>
+          </div>
+        </div>
+      `
+    };
+
+    await emailTransporter.sendMail(mailOptions);
+    console.log(`Approval email sent to ${userEmail}`);
+  } catch (error) {
+    console.error('Failed to send approval email:', error);
+  }
+}
 
 function getBearerToken(req) {
   const authHeader = req.headers.authorization || "";
@@ -806,6 +880,12 @@ app.patch("/api/admin/users/:uid/approval", requireAuth, requireAdmin, async (re
 
     if (action === "approve") {
       await admin.auth().updateUser(uid, { disabled: false });
+      
+      // Get user data for email notification
+      const userSnap = await db.ref(`users/${uid}`).once("value");
+      const userProfile = userSnap.val() || {};
+      const userRecord = await admin.auth().getUser(uid);
+      
       await db.ref(`users/${uid}`).update({
         enabled: true,
         approvalStatus: "approved",
@@ -814,6 +894,14 @@ app.patch("/api/admin/users/:uid/approval", requireAuth, requireAdmin, async (re
         updatedAt: nowIso,
         updatedBy: req.user.uid
       });
+      
+      // Send approval email
+      await sendApprovalEmail(
+        userRecord.email,
+        userProfile.name || userRecord.displayName || userRecord.email,
+        userProfile.role || 'user'
+      );
+      
       return res.json({ uid, action, enabled: true, approvalStatus: "approved" });
     }
 
@@ -856,6 +944,16 @@ app.patch("/api/admin/users/:uid/status", requireAuth, requireAdmin, async (req,
       }
       if (!profile.approvedBy) {
         updatePayload.approvedBy = req.user.uid;
+      }
+      
+      // Send approval email if user was previously not approved
+      if (profile.approvalStatus !== "approved") {
+        const userRecord = await admin.auth().getUser(uid);
+        await sendApprovalEmail(
+          userRecord.email,
+          profile.name || userRecord.displayName || userRecord.email,
+          profile.role || 'user'
+        );
       }
     } else if ((profile.approvalStatus || "") !== "pending") {
       updatePayload.approvalStatus = "disabled";
@@ -1340,9 +1438,15 @@ throw new Error(`Telegram API error: ${response.status} ${payload}`);
 return { ok: true };
 }
 
-setInterval(pollTelegramUpdates, 5000);
+const PORT = process.env.PORT || 3000;
 
-// ================= START SERVER =================
-app.listen(3000, () => {
+// Initialize email service
+initEmailService();
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+  console.log(`Auth required: ${AUTH_REQUIRED}`);
+  console.log(`Telegram bot: ${TELEGRAM_BOT_TOKEN ? 'enabled' : 'disabled'}`);
+  console.log(`Email service: ${emailTransporter ? 'enabled' : 'disabled'}`);
   console.log("Web server running at http://localhost:3000");
 });
