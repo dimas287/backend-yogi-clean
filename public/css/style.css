@@ -2052,19 +2052,21 @@ footer span { font-family: 'JetBrains Mono', monospace; }
   }
 
   .page-content {
-    padding: 12px 0 0 0;
+    padding: 0;
     width: 100%;
   }
 
-  .member-layout.sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
+  .member-layout {
+    position: static;
+    height: auto;
     width: 100%;
+    z-index: auto;
+  }
+
+  .member-sidebar {
+    width: 100% !important;
     height: auto;
     flex-direction: row;
-    align-items: center;
-    justify-content: flex-start;
     flex-wrap: nowrap;
     overflow-x: auto;
     overflow-y: hidden;
@@ -2074,8 +2076,16 @@ footer span { font-family: 'JetBrains Mono', monospace; }
     padding: 8px 12px;
     gap: 6px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-    margin-bottom: 12px;
-    z-index: 1500;
+    margin-bottom: 16px;
+  }
+
+  body.member-sidebar-collapsed .member-sidebar {
+    width: 100% !important;
+    height: auto;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
   }
 
   .sidebar-brand {
@@ -2103,6 +2113,12 @@ footer span { font-family: 'JetBrains Mono', monospace; }
     gap: 6px;
     flex-shrink: 0;
     overflow: visible;
+  }
+
+  body.member-sidebar-collapsed .member-nav-btn {
+    justify-content: flex-start;
+    padding: 7px 12px;
+    gap: 6px;
   }
 
   .member-nav-label {
