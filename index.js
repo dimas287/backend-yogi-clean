@@ -12,19 +12,32 @@ app.use(express.json());
 app.use(express.static("public"));
 
 // ================= FIREBASE =================
-const serviceAccount = {
-  type: "service_account",
-  project_id: process.env.FIREBASE_PROJECT_ID || "air-quality-357a1",
-  private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID || "1e0d8d6e1d56a4b124b375207451cf4072040d71",
-  private_key: process.env.FIREBASE_PRIVATE_KEY ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n') : "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQC9irvdyzi9FdvX\nEsiuCbmwH0Uo4XSASVCYKACeCFs2o8kJh69FBTvOw39TrURO0/STPypn+WsKvVKJ\nN/TKTpJd0XnqE0xFnOfCSpsMDrkhz8d8AEjqRRMAk03Jwugt39Oz0Xd0UOfgDVgD\nbzQrCxJLK0YztRnoasHK682UCUm3t95lDPmlQKsMHYkokbfaMazqS7NWkyjchyHZ\ni2u2NqSLS5EogHkeLxN5brHiCdldj2s3W+f2JrjYURoqvcWfcqUbyDlKX0njw3aa\nr1qP7GAJQA7xDtpvqjmBUAtPLJIzqrd+TzgePe5dyi1ARw9K1JM7+B18Ndn/fF6+\nVH43QjNbAgMBAAECggEAHkQmBZ+q2r6/0RMlymyxIweLQqDluop6fSF+H74T2qDC\nvGvXN/1C9JxRG6qCStgbqNugSOQSDK/4mwK9awSq6KJHhnI4brFEbMj/AyjitRx5\nrTpaalZHV4MuG7as3o5sPr2HBqLYs/VNhZbfTLRC4o/xcNZNYciSU3Xd6PKmu9gx\nCPDD3Bk3mIkaXh2GZfhzSWBJbOsW0SmMpiquZY41F/yUXNB/JDUMsSV/s39HtOTV\nnvl+EgNxt5Qp1rVspnTgTuvyAQvowBzBKIx99ZZ7wHUV7Qzeg3oxfl7pZMo/jIhR\n13BieyefHq89z2xnyuN40XQV26kJCCMJAPGLQWbqmQKBgQDpuPqkAUhPLnDQ0FAp\nZeMw17j4csI43lsw+SAwEcpevFqPCPzGvMpmDULVXq6SziKL4XxHzjvrxFlJMonR\nAvmwKGiL8Yhfho4e4W0uh/LlkdG8pXa3fh0RO0mbauo7lpSSVieQxpo7RXil4Mnc\nVpSokL0rhZycqO33mO4ckUPCFQKBgQDPm7YK3Kwd4k4zCxRclm96cBRJy3ag4AAb\n1vfg57RZB/i0l4GknYR06M2WLvxhcLYshO/FDrVO5l90IzOasKQjjoI4UZOGulMh\noTIpPY+e8Qm46YEzi4zKhPtP+bJxEBzD7KHSQsU7H5l1/QWxyPHQqsSQRCv5IelN\nVrPyd7srrwKBgQDTcpm3JL3hfPdtwviy603GU3QxuckDIA/KV6iKNJ4sZSVcwFnI\nBubputebKASyJjHU8VO5ttg5LbNFaKaMZK+2cmhbK1IgciBDydg4P6A9l1Xz4JJt\n4Xe0rjmilPCCpnGVjsJO1Y6VTv2evKaDZAUsF349UKzmgmKAHWhWigmOHQKBgDt4\nGiRwY+lHiyj58oI3IYXMFzOwUbHxmHZhFK5bEQEz1F0+zQcvi+LFUSbFHMx4seZ8\ngYDmZIZUZx9/OlB0jLRPqINVBoSw39tomXH2Z0o5KUQVk9CmTjl8OtO1numpubE\noPIO6FpwSdBPg1MTAZnJYPcGYCZEPYVG4dMB0x7HAoGBALbqaIuW2TWYSGIuVMBI\nlC129YYvgd5KxkBAMTmTYLadj00EUKcHUALXuSB3o7UmphLJaUYoj4QcWA0Lay5N\n9G6gPpBdRZeuiZby/TekjwSdx9tpM4nJDi01k8V0jipW/4sbcJlmKjA2D/GXPf57\nelKeEP/lX3lyaNSYYYxmAQOc\n-----END PRIVATE KEY-----\n",
-  client_email: process.env.FIREBASE_CLIENT_EMAIL || "firebase-adminsdk-fbsvc@air-quality-357a1.iam.gserviceaccount.com",
-  client_id: process.env.FIREBASE_CLIENT_ID || "107361987441400167534",
-  auth_uri: "https://accounts.google.com/o/oauth2/auth",
-  token_uri: "https://oauth2.googleapis.com/token",
-  auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs",
-  client_x509_cert_url: "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40air-quality-357a1.iam.gserviceaccount.com",
-  universe_domain: "googleapis.com"
-};
+let serviceAccount;
+
+// Try to use environment variables first, fallback to file
+if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_PRIVATE_KEY) {
+  serviceAccount = {
+    type: "service_account",
+    project_id: process.env.FIREBASE_PROJECT_ID,
+    private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID || "1e0d8d6e1d56a4b124b375207451cf4072040d71",
+    private_key: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+    client_email: process.env.FIREBASE_CLIENT_EMAIL || "firebase-adminsdk-fbsvc@air-quality-357a1.iam.gserviceaccount.com",
+    client_id: process.env.FIREBASE_CLIENT_ID || "107361987441400167534",
+    auth_uri: "https://accounts.google.com/o/oauth2/auth",
+    token_uri: "https://oauth2.googleapis.com/token",
+    auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs",
+    client_x509_cert_url: "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40air-quality-357a1.iam.gserviceaccount.com",
+    universe_domain: "googleapis.com"
+  };
+} else {
+  // Fallback to file if available
+  try {
+    serviceAccount = require("./serviceAccountKey.json");
+  } catch (e) {
+    console.error("Firebase credentials not found in environment variables or serviceAccountKey.json");
+    process.exit(1);
+  }
+}
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
