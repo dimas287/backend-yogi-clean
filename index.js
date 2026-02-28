@@ -1003,9 +1003,11 @@ db.ref('devices').on('child_changed', (snapshot) => {
 
 console.log('Server-side Telegram alerts enabled');
 
+// ================= TELEGRAM BOT POLLING =================
 
 let lastTelegramUpdateId = 0;
 let isPolling = false;
+const processedUpdates = new Set();
 
 async function pollTelegramUpdates() {
   if (!TELEGRAM_BOT_TOKEN || isPolling) return;
@@ -1024,9 +1026,22 @@ async function pollTelegramUpdates() {
     console.log('Received', data.result.length, 'updates from Telegram');
     if (data.ok && data.result) {
       for (const update of data.result) {
+        // Skip if already processed
+        if (processedUpdates.has(update.update_id)) {
+          console.log('Skipping already processed update ID:', update.update_id);
+          continue;
+        }
+        
         console.log('Processing update ID:', update.update_id);
         await processTelegramUpdate(update);
         lastTelegramUpdateId = Math.max(lastTelegramUpdateId, update.update_id);
+        processedUpdates.add(update.update_id);
+        
+        // Clean old processed updates (keep last 100)
+        if (processedUpdates.size > 100) {
+          const oldestId = Math.min(...processedUpdates);
+          processedUpdates.delete(oldestId);
+        }
       }
     }
   } catch (error) {
