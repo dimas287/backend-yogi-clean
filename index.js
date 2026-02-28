@@ -1003,7 +1003,6 @@ db.ref('devices').on('child_changed', (snapshot) => {
 
 console.log('Server-side Telegram alerts enabled');
 
-// ================= TELEGRAM BOT POLLING =================
 
 let lastTelegramUpdateId = 0;
 let isPolling = false;
@@ -1015,7 +1014,7 @@ async function pollTelegramUpdates() {
   console.log('Polling Telegram updates with offset:', lastTelegramUpdateId + 1);
   try {
     const endpoint = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getUpdates?offset=${lastTelegramUpdateId + 1}&timeout=30`;
-    const response = await fetch(endpoint);
+    const response = await fetch(endpoint, { timeout: 35000 });
     if (!response.ok) {
       console.error('Telegram API error:', response.status, await response.text());
       return;
