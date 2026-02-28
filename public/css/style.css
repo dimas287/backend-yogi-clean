@@ -2052,35 +2052,30 @@ footer span { font-family: 'JetBrains Mono', monospace; }
   }
 
   .page-content {
-    padding: 0;
+    padding: 12px 0 0 0;
     width: 100%;
   }
 
-  .member-layout {
-    position: static;
-    height: auto;
-    width: 100%;
-    z-index: auto;
-  }
-
-  .member-sidebar {
+  .member-layout.sidebar {
     position: fixed;
-    bottom: 0;
+    top: 0;
     left: 0;
-    right: 0;
-    width: 100% !important;
+    width: 100%;
     height: auto;
     flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
     flex-wrap: nowrap;
     overflow-x: auto;
     overflow-y: hidden;
     border-right: none;
     border-bottom: 1px solid var(--border);
     border-radius: 0;
-    padding: 8px 12px calc(16px + env(safe-area-inset-bottom, 0px));
+    padding: 8px 12px;
     gap: 6px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-    margin-bottom: 0;
+    margin-bottom: 12px;
+    z-index: 1500;
   }
 
   .sidebar-brand {
