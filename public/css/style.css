@@ -427,6 +427,27 @@ body::before {
 
 .admin-modal-card {
   max-width: 920px;
+  max-height: 85vh;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(249, 115, 22, 0.3) transparent;
+}
+
+.admin-modal-card::-webkit-scrollbar {
+  width: 6px;
+}
+
+.admin-modal-card::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.admin-modal-card::-webkit-scrollbar-thumb {
+  background: rgba(249, 115, 22, 0.3);
+  border-radius: 3px;
+}
+
+.admin-modal-card::-webkit-scrollbar-thumb:hover {
+  background: rgba(249, 115, 22, 0.5);
 }
 
 .admin-create-form {
