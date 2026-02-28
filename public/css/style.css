@@ -851,7 +851,7 @@ body.member-sidebar-collapsed .member-nav-btn:hover .nav-tooltip {
 
 .member-table {
   width: 100%;
-  min-width: 860px;
+  min-width: 1200px;
   border-collapse: collapse;
   font-size: 11px;
 }
@@ -879,10 +879,32 @@ body.member-sidebar-collapsed .member-nav-btn:hover .nav-tooltip {
 .member-table th,
 .member-table td {
   border-bottom: 1px solid var(--border);
-  padding: 9px 12px;
+  padding: 8px 10px;
   text-align: left;
-  font-size: 12px;
+  vertical-align: middle;
+  white-space: nowrap;
 }
+
+.member-table th:nth-child(1),
+.member-table td:nth-child(1) { width: 140px; } /* Waktu */
+.member-table th:nth-child(2),
+.member-table td:nth-child(2) { width: 100px; } /* Device */
+.member-table th:nth-child(3),
+.member-table td:nth-child(3) { width: 60px; } /* PM2.5 */
+.member-table th:nth-child(4),
+.member-table td:nth-child(4) { width: 60px; } /* PM10 */
+.member-table th:nth-child(5),
+.member-table td:nth-child(5) { width: 70px; } /* Suhu */
+.member-table th:nth-child(6),
+.member-table td:nth-child(6) { width: 80px; } /* Kelembaban */
+.member-table th:nth-child(7),
+.member-table td:nth-child(7) { width: 100px; } /* Kecepatan Angin */
+.member-table th:nth-child(8),
+.member-table td:nth-child(8) { width: 80px; } /* Arah Angin */
+.member-table th:nth-child(9),
+.member-table td:nth-child(9) { width: 80px; } /* Status */
+.member-table th:nth-child(10),
+.member-table td:nth-child(10) { width: auto; } /* Aksi */
 
 .member-device-badge {
   font-family: 'JetBrains Mono', monospace;
