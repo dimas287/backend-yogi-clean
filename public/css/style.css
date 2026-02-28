@@ -785,7 +785,7 @@ body.member-sidebar-collapsed .sidebar-brand-icon {
 }
 
 body.member-sidebar-collapsed .sidebar-brand {
-  justify-content: center;
+  justify-content: flex-start;
   padding-bottom: 14px;
 }
 
