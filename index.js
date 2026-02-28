@@ -982,6 +982,14 @@ async function sendAutoTelegramAlert(device, data) {
       `${status === 'AMAN' ? '🟢' : '⚪'} AMAN: PM2.5 < 75 µg/m³\n\n` +
       `_🤖 Sistem Alert Otomatis_`;
     
+    await sendTelegramMessage(message, TELEGRAM_CHAT_ID);
+    console.log(`Auto Telegram alert sent for ${device}: PM2.5=${data.pm25}, Status=${status}`);
+  } catch (error) {
+    console.error('Failed to send auto Telegram alert:', error.message);
+  }
+}
+
+// Listen for device data changes
 db.ref('devices').on('child_changed', (snapshot) => {
   const deviceKey = snapshot.key;
   const deviceData = snapshot.val();
