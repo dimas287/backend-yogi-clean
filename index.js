@@ -1340,32 +1340,31 @@ async function getHistoryAsGuest(device, limit) {
   const snapshot = await db.ref(`devices/${device}/history`).once("value");
   const data = snapshot.val() || {};
   console.log('Fetched history for device:', device, 'with', Object.keys(data).length, 'entries');
-  return data;
+  return Object.values(data).slice(-limit); // Return the last 'limit' entries
 }
 
-// ... (rest of the code remains the same)
-async function sendTelegramMessage(text, chatId, parseMode) {
-if (!TELEGRAM_BOT_TOKEN || !chatId) {
-return { ok: false, reason: "Telegram is not configured" };
-}
+async function sendTelegramMessage(text, chatId, parseMode = 'Markdown') {
+  if (!TELEGRAM_BOT_TOKEN || !chatId) {
+    return { ok: false, reason: "Telegram is not configured" };
+  }
 
-const endpoint = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-const body = { chat_id: chatId, text };
-if (parseMode) body.parse_mode = parseMode;
+  const endpoint = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+  const body = { chat_id: chatId, text };
+  if (parseMode) body.parse_mode = parseMode;
 
-const response = await fetch(endpoint, {
-method: "POST",
-headers: { "Content-Type": "application/json" },
-body: JSON.stringify(body)
-});
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
 
-if (!response.ok) {
-const payload = await response.text().catch(() => "");
-console.error('Send Telegram message failed:', response.status, payload);
-throw new Error(`Telegram API error: ${response.status} ${payload}`);
-}
+  if (!response.ok) {
+    const payload = await response.text().catch(() => "");
+    console.error('Send Telegram message failed:', response.status, payload);
+    throw new Error(`Telegram API error: ${response.status} ${payload}`);
+  }
 
-return { ok: true };
+  return { ok: true };
 }
 
 setInterval(pollTelegramUpdates, 5000);
