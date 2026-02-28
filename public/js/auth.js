@@ -313,6 +313,7 @@ function attachAuthUiHandlers() {
   const btnLogout = document.getElementById('btnLogout');
   const btnOpenAdmin = document.getElementById('btnOpenAdmin');
   const btnCloseAdmin = document.getElementById('btnCloseAdmin');
+  const btnCloseAdminTop = document.getElementById('btnCloseAdminTop');
   const btnAdminRefresh = document.getElementById('btnAdminRefresh');
   const btnAdminCreateUser = document.getElementById('btnAdminCreateUser');
   const btnSaveProfile = document.getElementById('btnSaveProfile');
@@ -423,6 +424,7 @@ function attachAuthUiHandlers() {
     btnOpenAdmin.onclick = async () => { setAdminModalVisible(true); await loadAdminUsers(); };
   }
   if (btnCloseAdmin) btnCloseAdmin.onclick = () => setAdminModalVisible(false);
+  if (btnCloseAdminTop) btnCloseAdminTop.onclick = () => setAdminModalVisible(false);
   if (btnAdminRefresh) btnAdminRefresh.onclick = async () => { await loadAdminUsers(); };
   if (btnAdminCreateUser) btnAdminCreateUser.onclick = async () => { await createAdminUserFromForm(); };
 
