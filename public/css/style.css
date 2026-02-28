@@ -2098,7 +2098,7 @@ footer span { font-family: 'JetBrains Mono', monospace; }
     padding: 8px 12px;
     gap: 6px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-    margin-bottom: 0;
+    margin-bottom: 16px;
   }
 
   .sidebar-brand {
