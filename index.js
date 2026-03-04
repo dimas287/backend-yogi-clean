@@ -257,7 +257,6 @@ function sanitizeRow(row) {
     status: row.status || getStatus(Number(row.pm25) || 0)
   };
 }
-
 function isValidDateOnly(value) {
   return /^\d{4}-\d{2}-\d{2}$/.test(String(value || ""));
 }
@@ -393,7 +392,6 @@ client.on("message", async (topic, message) => {
 
 async function notifyAdminNewSignup(payload) {
   if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) return;
-
   const message = [
     "🔔 PENDAFTARAN AKUN BARU (MENUNGGU APPROVAL)",
     "",
@@ -801,9 +799,7 @@ app.patch("/api/admin/users/:uid/approval", requireAuth, requireAdmin, async (re
     if (action !== "approve" && action !== "reject") {
       return res.status(400).json({ error: "action must be approve or reject" });
     }
-
     const nowIso = new Date().toISOString();
-
     if (action === "approve") {
       await admin.auth().updateUser(uid, { disabled: false });
       await db.ref(`users/${uid}`).update({
@@ -816,7 +812,6 @@ app.patch("/api/admin/users/:uid/approval", requireAuth, requireAdmin, async (re
       });
       return res.json({ uid, action, enabled: true, approvalStatus: "approved" });
     }
-
     await admin.auth().updateUser(uid, { disabled: true });
     await db.ref(`users/${uid}`).update({
       enabled: false,
@@ -826,7 +821,6 @@ app.patch("/api/admin/users/:uid/approval", requireAuth, requireAdmin, async (re
       updatedAt: nowIso,
       updatedBy: req.user.uid
     });
-
     res.json({ uid, action, enabled: false, approvalStatus: "rejected" });
   } catch (error) {
     console.error("Update approval error:", error);
@@ -899,7 +893,6 @@ app.patch("/api/admin/locations/:device", requireAuth, requireAdmin, async (req,
       updatedAt: new Date().toISOString(),
       updatedBy: req.user.uid
     });
-
     res.json({ device, name: name || device, lat: Number(lat), lng: Number(lng) });
   } catch (error) {
     console.error("Update location error:", error);
@@ -1032,7 +1025,6 @@ async function pollTelegramUpdates() {
           console.log('Skipping already processed update ID:', update.update_id);
           continue;
         }
-        
         console.log('Processing update ID:', update.update_id);
         await processTelegramUpdate(update);
         lastTelegramUpdateId = Math.max(lastTelegramUpdateId, update.update_id);
@@ -1165,19 +1157,18 @@ async function handleTelegramCommand(command, chatId) {
       const statusColor = status === 'BAHAYA' ? '🔴' : status === 'WASPADA' ? '🟡' : '🟢';
 
       const msg = `${statusEmoji} *INDEKS KUALITAS UDARA* ${statusEmoji}\n\n` +
-        `📍 *Lokasi*: ${device}\n` +
-        `🌫️ *PM2.5*: ${data.pm25} µg/m³\n` +
-        `💨 *PM10*: ${data.pm10 || 'N/A'} µg/m³\n` +
-        `🌡️ *Suhu*: ${data.suhu || 'N/A'}°C\n` +
-        `💧 *Kelembaban*: ${data.kelembaban || 'N/A'}%\n` +
-        `💨 *Kecepatan Angin*: ${data.kecepatan_angin || 'N/A'} m/s\n` +
-        `${statusColor} *Status*: ${status}\n` +
-        `🕐 *Update*: ${new Date(data.timestamp).toLocaleString('id-ID')}\n\n` +
-        `📊 *Kategori AQI*:\n` +
+        `📍 Lokasi: ${device}\n` +
+        `🌫️ PM2.5: ${data.pm25} µg/m³\n` +
+        `💨 PM10: ${data.pm10 || 'N/A'} µg/m³\n` +
+        `🌡️ Suhu: ${data.suhu || 'N/A'}°C\n` +
+        `💧 Kelembaban: ${data.kelembaban || 'N/A'}%\n` +
+        `💨 Kecepatan Angin: ${data.kecepatan_angin || 'N/A'} m/s\n` +
+        `${statusColor} Status: ${status}\n` +
+        `🕐 Update: ${new Date(data.timestamp).toLocaleString('id-ID')}\n\n` +
+        `📊 Kategori AQI:\n` +
         `🔴 BAHAYA: PM2.5 ≥ 150 µg/m³\n` +
         `🟡 WASPADA: PM2.5 75-149 µg/m³\n` +
         `🟢 AMAN: PM2.5 < 75 µg/m³`;
-
       console.log('Sending AQI:', msg);
       await sendTelegramMessage(msg, chatId);
     } catch (error) {
@@ -1188,7 +1179,6 @@ async function handleTelegramCommand(command, chatId) {
   } else if (cmd === '/history' || cmd === '/get_history') {
     const device = parts[1];
     const limit = Math.min(parseInt(parts[2]) || 10, 50); // max 50
-
     if (!device) {
       const msg = `❌ *Format Salah*\n\n` +
         `📝 *Cara Penggunaan:*\n` +
@@ -1198,7 +1188,6 @@ async function handleTelegramCommand(command, chatId) {
       await sendTelegramMessage(msg, chatId);
       return;
     }
-
     try {
       const history = await getHistoryAsGuest(device, limit);
       const entries = Object.values(history).slice(-limit);
@@ -1312,20 +1301,20 @@ async function handleTelegramCommand(command, chatId) {
         `🌫️ *PM2.5*: ${data.pm25} µg/m³\n` +
         `🕐 *Update*: ${new Date(data.timestamp).toLocaleString('id-ID')}\n\n` +
         `📊 *Keterangan Status*:\n` +
-        `${status === 'BAHAYA' ? '🔴' : '⚪'} **BAHAYA** - Udara sangat tidak sehat, hindari aktivitas outdoor\n` +
-        `${status === 'WASPADA' ? '🟡' : '⚪'} **WASPADA** - Udara tidak sehat, batasi aktivitas outdoor\n` +
-        `${status === 'AMAN' ? '🟢' : '⚪'} **AMAN** - Udara aman untuk aktivitas`;
+        `${status === 'BAHAYA' ? '🔴' : '⚪'} *BAHAYA* - Udara sangat tidak sehat, hindari aktivitas outdoor\n` +
+        `${status === 'WASPADA' ? '🟡' : '⚪'} *WASPADA* - Udara tidak sehat, batasi aktivitas outdoor\n` +
+        `${status === 'AMAN' ? '🟢' : '⚪'} *AMAN* - Udara aman untuk aktivitas`;
       
       console.log('Sending status:', msg);
       await sendTelegramMessage(msg, chatId);
     } catch (error) {
+      console.error('Status command error details:', error.message, error.stack);
       const msg = `❌ *Error*\n\nGagal mengambil data status. Silakan coba lagi.`;
       console.log('Sending status error:', msg);
       await sendTelegramMessage(msg, chatId);
     }
   } else {
-    const msg = `❌ *Perintah Tidak Dikenal*\n\n` +
-      `Ketik /help untuk melihat daftar perintah yang tersedia.`;
+    const msg = `❌ *Perintah Tidak Dikenal*\n\nKetik /help untuk melihat daftar perintah yang tersedia.`;
     console.log('Sending unknown:', msg);
     await sendTelegramMessage(msg, chatId);
   }
@@ -1348,10 +1337,10 @@ async function getHistoryAsGuest(device, limit) {
   const snapshot = await db.ref(`devices/${device}/history`).once("value");
   const data = snapshot.val() || {};
   console.log('Fetched history for device:', device, 'with', Object.keys(data).length, 'entries');
-  return Object.values(data).slice(-limit); // Return the last 'limit' entries
+  return Object.values(data).slice(-limit);
 }
 
-async function sendTelegramMessage(text, chatId, parseMode = 'Markdown') {
+async function sendTelegramMessage(text, chatId, parseMode = null) {
   if (!TELEGRAM_BOT_TOKEN || !chatId) {
     return { ok: false, reason: "Telegram is not configured" };
   }
@@ -1365,13 +1354,12 @@ async function sendTelegramMessage(text, chatId, parseMode = 'Markdown') {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body)
   });
-
+  
   if (!response.ok) {
     const payload = await response.text().catch(() => "");
     console.error('Send Telegram message failed:', response.status, payload);
     throw new Error(`Telegram API error: ${response.status} ${payload}`);
   }
-
   return { ok: true };
 }
 
